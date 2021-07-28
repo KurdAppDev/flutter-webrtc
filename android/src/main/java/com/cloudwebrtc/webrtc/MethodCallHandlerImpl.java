@@ -71,6 +71,8 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.view.TextureRegistry;
 import io.flutter.view.TextureRegistry.SurfaceTextureEntry;
+import org.webrtc.SoftwareVideoDecoderFactory;
+import org.webrtc.SoftwareVideoEncoderFactory;
 
 import static com.cloudwebrtc.webrtc.utils.MediaConstraintsUtils.parseMediaConstraints;
 
@@ -153,10 +155,16 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
 
     getUserMediaImpl.audioDeviceModule = (JavaAudioDeviceModule) audioDeviceModule;
 
-    mFactory = PeerConnectionFactory.builder()
+   /* mFactory = PeerConnectionFactory.builder()
             .setOptions(new Options())
             .setVideoEncoderFactory(new DefaultVideoEncoderFactory(eglContext, false, true))
             .setVideoDecoderFactory(new DefaultVideoDecoderFactory(eglContext))
+            .setAudioDeviceModule(audioDeviceModule)
+            .createPeerConnectionFactory();*/
+    mFactory = PeerConnectionFactory.builder()
+            .setOptions(new Options())
+            .setVideoEncoderFactory(new SoftwareVideoEncoderFactory() /*new DefaultVideoEncoderFactory(eglContext, false, true) */)
+            .setVideoDecoderFactory(new SoftwareVideoDecoderFactory()/* new DefaultVideoDecoderFactory(eglContext) */)
             .setAudioDeviceModule(audioDeviceModule)
             .createPeerConnectionFactory();
   }
