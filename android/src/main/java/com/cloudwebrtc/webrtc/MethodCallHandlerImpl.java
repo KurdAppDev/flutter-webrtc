@@ -445,6 +445,38 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
         result.success(null);
         break;
       }
+      case "videoRendererSetVideoTrack": {
+        int textureId = call.argument("textureId");
+        String streamId = call.argument("streamId");
+        String ownerTag = call.argument("ownerTag");
+        String trackId = call.argument("trackId");
+        FlutterRTCVideoRenderer render = renders.get(textureId);
+        if (render == null) {
+          resultError("videoRendererSetVideoTrack", "render [" + textureId + "] not found !", result);
+          return;
+        }
+        MediaStream stream = null;
+        if (ownerTag.equals("local")) {
+          stream = localStreams.get(streamId);
+        } else {
+          stream = getStreamForId(streamId, ownerTag);
+        }
+        VideoTrack videoTrack = null;
+
+        if (stream != null && !stream.videoTracks.isEmpty()) {
+          for (VideoTrack track : stream.videoTracks) {
+            if (track.id().equals(trackId)) {
+              videoTrack = track;
+              break;
+            }
+          }
+          render.setStream(stream);
+          render.setVideoTrack(videoTrack);
+        }
+
+        result.success(null);
+        break;
+      }
       case "mediaStreamTrackHasTorch": {
         String trackId = call.argument("trackId");
         getUserMediaImpl.hasTorch(trackId, result);

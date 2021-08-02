@@ -150,7 +150,7 @@ public class FlutterRTCVideoRenderer implements EventChannel.StreamHandler {
         } else {
             List<VideoTrack> videoTracks = mediaStream.videoTracks;
 
-            videoTrack = videoTracks.isEmpty() ? null : videoTracks.get(videoTracks.size() -1);
+            videoTrack = videoTracks.isEmpty() ? null : videoTracks.get(0/*videoTracks.size() -1*/);
         }
 
         setVideoTrack(videoTrack);

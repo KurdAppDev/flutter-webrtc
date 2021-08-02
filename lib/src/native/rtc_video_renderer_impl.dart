@@ -12,15 +12,14 @@ class RTCVideoRendererNative extends VideoRenderer {
   final _channel = WebRTC.methodChannel();
   int? _textureId;
   MediaStream? _srcObject;
+  MediaStreamTrack? _videoTrack;
   StreamSubscription<dynamic>? _eventSubscription;
 
   @override
   Future<void> initialize() async {
     final response = await WebRTC.invokeMethod('createVideoRenderer', {});
     _textureId = response['textureId'];
-    _eventSubscription = EventChannel('FlutterWebRTC/Texture$textureId')
-        .receiveBroadcastStream()
-        .listen(eventListener, onError: errorListener);
+    _eventSubscription = EventChannel('FlutterWebRTC/Texture$textureId').receiveBroadcastStream().listen(eventListener, onError: errorListener);
   }
 
   @override
@@ -40,14 +39,23 @@ class RTCVideoRendererNative extends VideoRenderer {
     if (textureId == null) throw 'Call initialize before setting the stream';
 
     _srcObject = stream;
-    _channel.invokeMethod('videoRendererSetSrcObject', <String, dynamic>{
+    _channel.invokeMethod(
+        'videoRendererSetSrcObject', <String, dynamic>{'textureId': textureId, 'streamId': stream?.id ?? '', 'ownerTag': stream?.ownerTag ?? ''}).then((_) {
+      value = (stream == null) ? RTCVideoValue.empty : value.copyWith(renderVideo: renderVideo);
+    });
+  }
+
+  @override
+  set videoTrack(MediaStreamTrack? videoTrack) {
+    _videoTrack = videoTrack;
+    if (textureId == null) throw 'Call initialize before setting the stream';
+    _channel.invokeMethod('videoRendererSetVideoTrack', <String, dynamic>{
       'textureId': textureId,
-      'streamId': stream?.id ?? '',
-      'ownerTag': stream?.ownerTag ?? ''
+      'streamId': _srcObject?.id ?? '',
+      'ownerTag': _srcObject?.ownerTag ?? '',
+      'trackId': videoTrack?.id,
     }).then((_) {
-      value = (stream == null)
-          ? RTCVideoValue.empty
-          : value.copyWith(renderVideo: renderVideo);
+      value = (_srcObject == null) ? RTCVideoValue.empty : value.copyWith(renderVideo: renderVideo);
     });
   }
 
@@ -66,15 +74,11 @@ class RTCVideoRendererNative extends VideoRenderer {
     final Map<dynamic, dynamic> map = event;
     switch (map['event']) {
       case 'didTextureChangeRotation':
-        value =
-            value.copyWith(rotation: map['rotation'], renderVideo: renderVideo);
+        value = value.copyWith(rotation: map['rotation'], renderVideo: renderVideo);
         onResize?.call();
         break;
       case 'didTextureChangeVideoSize':
-        value = value.copyWith(
-            width: 0.0 + map['width'],
-            height: 0.0 + map['height'],
-            renderVideo: renderVideo);
+        value = value.copyWith(width: 0.0 + map['width'], height: 0.0 + map['height'], renderVideo: renderVideo);
         onResize?.call();
         break;
       case 'didFirstFrameRendered':
@@ -100,8 +104,7 @@ class RTCVideoRendererNative extends VideoRenderer {
       throw Exception('Can\'t be muted: The MediaStream is null');
     }
     if (_srcObject!.ownerTag != 'local') {
-      throw Exception(
-          'You\'re trying to mute a remote track, this is not supported');
+      throw Exception('You\'re trying to mute a remote track, this is not supported');
     }
     if (_srcObject!.getAudioTracks().isEmpty) {
       throw Exception('Can\'t be muted: The MediaStreamTrack(audio) is empty');

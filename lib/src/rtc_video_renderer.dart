@@ -28,6 +28,8 @@ class RTCVideoRenderer {
 
   set srcObject(MediaStream? stream) => _delegate.srcObject = stream;
 
+  set videoTrack(MediaStreamTrack? videoTrack) => _delegate.videoTrack = videoTrack;
+
   int? get textureId => _delegate.textureId;
 
   Future<void> dispose() async {

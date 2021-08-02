@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../flutter_webrtc.dart';
 import 'media_stream.dart';
 
 @immutable
@@ -18,9 +19,7 @@ class RTCVideoValue {
     if (width == 0.0 || height == 0.0) {
       return 1.0;
     }
-    return (rotation == 90 || rotation == 270)
-        ? height / width
-        : width / height;
+    return (rotation == 90 || rotation == 270) ? height / width : width / height;
   }
 
   RTCVideoValue copyWith({
@@ -38,8 +37,6 @@ class RTCVideoValue {
   }
 
   @override
-  String toString() =>
-      '$runtimeType(width: $width, height: $height, rotation: $rotation)';
 }
 
 abstract class VideoRenderer extends ValueNotifier<RTCVideoValue> {
@@ -63,6 +60,7 @@ abstract class VideoRenderer extends ValueNotifier<RTCVideoValue> {
   Future<void> initialize();
 
   MediaStream? get srcObject;
+  set videoTrack(MediaStreamTrack? videoTrack);
   set srcObject(MediaStream? stream);
 
   @override

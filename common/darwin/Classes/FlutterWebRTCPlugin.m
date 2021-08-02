@@ -488,6 +488,41 @@
         }
         [self rendererSetSrcObject:render stream:videoTrack];
         result(nil);
+    } else if ([@"videoRendererSetVideoTrack" isEqualToString:call.method]){
+        NSDictionary* argsMap = call.arguments;
+        NSNumber *textureId = argsMap[@"textureId"];
+        FlutterRTCVideoRenderer *render = self.renders[textureId];
+        NSString *streamId = argsMap[@"streamId"];
+        NSString *ownerTag = argsMap[@"ownerTag"];
+        NSString *trackId = argsMap[@"trackId"];
+        if(!render) {
+            result([FlutterError errorWithCode:@"videoRendererSetSrcObject: render is nil" message:nil details:nil]);
+            return;
+        }
+        RTCMediaStream *stream = nil;
+        RTCVideoTrack* videoTrack = nil;
+        if([ownerTag isEqualToString:@"local"]){
+            stream = _localStreams[streamId];
+        }
+        if(!stream){
+            stream = [self streamForId:streamId peerConnectionId:ownerTag];
+        }
+        if(stream){
+            NSArray *videoTracks = stream ? stream.videoTracks : nil;
+            if(videoTracks && videoTracks.count){
+                for (int i = 0; i<videoTracks.count; i++) {
+                    if ([((RTCVideoTrack *) videoTracks[i]).trackId isEqualToString: trackId]) {
+                        videoTrack = videoTracks[i];
+                        break;
+                    }
+                }
+            }
+            if (!videoTrack) {
+                NSLog(@"Not found video track for RTCMediaStream: %@", streamId);
+            }
+        }
+        [self rendererSetSrcObject:render stream:videoTrack];
+        result(nil);
     } else if ([@"mediaStreamTrackHasTorch" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSString* trackId = argsMap[@"trackId"];

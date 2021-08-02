@@ -3,6 +3,7 @@ import 'dart:html' as html;
 import 'dart:js_util' as jsutil;
 
 import 'package:flutter/services.dart';
+import 'package:flutter_webrtc/src/interface/media_stream_track.dart';
 
 import '../interface/media_stream.dart';
 import '../interface/rtc_video_renderer.dart';
@@ -29,8 +30,7 @@ const Map<int, String> _kErrorValueToErrorDescription = {
 
 // The default error message, when the error is an empty string
 // See: https://developer.mozilla.org/en-US/docs/Web/API/MediaError/message
-const String _kDefaultErrorMessage =
-    'No further diagnostic information can be determined or provided.';
+const String _kDefaultErrorMessage = 'No further diagnostic information can be determined or provided.';
 
 class RTCVideoRendererWeb extends VideoRenderer {
   RTCVideoRendererWeb() : _textureId = _textureCounter++;
@@ -55,8 +55,7 @@ class RTCVideoRendererWeb extends VideoRenderer {
 
   bool _muted = false;
 
-  set objectFit(String fit) =>
-      findHtmlView()?.style.objectFit = _objectFit = fit;
+  set objectFit(String fit) => findHtmlView()?.style.objectFit = _objectFit = fit;
 
   @override
   int get videoWidth => value.width.toInt();
@@ -133,6 +132,9 @@ class RTCVideoRendererWeb extends VideoRenderer {
     value = value.copyWith(renderVideo: renderVideo);
   }
 
+  @override
+  set videoTrack(MediaStreamTrack? videoTrack) {}
+
   html.DivElement getAudioManageDiv() {
     var div = html.document.getElementById('html_webrtc_audio_manage_list');
     if (null != div) {
@@ -146,8 +148,7 @@ class RTCVideoRendererWeb extends VideoRenderer {
   }
 
   html.VideoElement? findHtmlView() {
-    var video =
-        html.document.getElementById('video_RTCVideoRenderer-$textureId');
+    var video = html.document.getElementById('video_RTCVideoRenderer-$textureId');
     if (null != video) {
       return video as html.VideoElement;
     }
@@ -179,8 +180,7 @@ class RTCVideoRendererWeb extends VideoRenderer {
     try {
       var element = findHtmlView();
       if (null != element && jsutil.hasProperty(element, 'setSinkId')) {
-        await jsutil.promiseToFuture<void>(
-            jsutil.callMethod(element, 'setSinkId', [deviceId]));
+        await jsutil.promiseToFuture<void>(jsutil.callMethod(element, 'setSinkId', [deviceId]));
 
         return true;
       }
@@ -233,8 +233,7 @@ class RTCVideoRendererWeb extends VideoRenderer {
           print('RTCVideoRenderer: videoElement.onError, ${error.toString()}');
           throw PlatformException(
             code: _kErrorValueToErrorName[error!.code]!,
-            message:
-                error.message != '' ? error.message : _kDefaultErrorMessage,
+            message: error.message != '' ? error.message : _kDefaultErrorMessage,
             details: _kErrorValueToErrorDescription[error.code],
           );
         }),
