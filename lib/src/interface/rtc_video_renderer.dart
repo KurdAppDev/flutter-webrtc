@@ -37,6 +37,7 @@ class RTCVideoValue {
   }
 
   @override
+  String toString() => '$runtimeType(width: $width, height: $height, rotation: $rotation)';
 }
 
 abstract class VideoRenderer extends ValueNotifier<RTCVideoValue> {
