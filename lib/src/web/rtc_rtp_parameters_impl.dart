@@ -1,4 +1,5 @@
 import 'dart:js_util' as jsutil;
+
 import '../interface/rtc_rtcp_parameters.dart';
 import '../interface/rtc_rtp_parameters.dart';
 
@@ -6,8 +7,7 @@ class RTCRtpParametersWeb {
   static RTCRtpParameters fromJsObject(Object object) {
     return RTCRtpParameters(
         transactionId: jsutil.getProperty(object, 'transactionId'),
-        rtcp: RTCRTCPParametersWeb.fromJsObject(
-            jsutil.getProperty(object, 'rtcp')),
+        rtcp: RTCRTCPParametersWeb.fromJsObject(jsutil.getProperty(object, 'rtcp')),
         headerExtensions: headerExtensionsFromJsObject(object),
         encodings: encodingsFromJsObject(object),
         codecs: codecsFromJsObject(object));
@@ -43,20 +43,14 @@ class RTCRtpParametersWeb {
 
 class RTCRTCPParametersWeb {
   static RTCRTCPParameters fromJsObject(Object object) {
-    return RTCRTCPParameters.fromMap({
-      'cname': jsutil.getProperty(object, 'cname'),
-      'reducedSize': jsutil.getProperty(object, 'reducedSize')
-    });
+    return RTCRTCPParameters.fromMap({'cname': jsutil.getProperty(object, 'cname'), 'reducedSize': jsutil.getProperty(object, 'reducedSize')});
   }
 }
 
 class RTCHeaderExtensionWeb {
   static RTCHeaderExtension fromJsObject(Object object) {
-    return RTCHeaderExtension.fromMap({
-      'uri': jsutil.getProperty(object, 'uri'),
-      'id': jsutil.getProperty(object, 'id'),
-      'encrypted': jsutil.getProperty(object, 'encrypted')
-    });
+    return RTCHeaderExtension.fromMap(
+        {'uri': jsutil.getProperty(object, 'uri'), 'id': jsutil.getProperty(object, 'id'), 'encrypted': jsutil.getProperty(object, 'encrypted')});
   }
 }
 
@@ -69,8 +63,7 @@ class RTCRtpEncodingWeb {
       'maxFramerate': jsutil.getProperty(object, 'maxFramerate'),
       'minBitrate': jsutil.getProperty(object, 'minBitrate'),
       'numTemporalLayers': jsutil.getProperty(object, 'numTemporalLayers'),
-      'scaleResolutionDownBy':
-          jsutil.getProperty(object, 'scaleResolutionDownBy'),
+      'scaleResolutionDownBy': jsutil.getProperty(object, 'scaleResolutionDownBy'),
       'ssrc': jsutil.getProperty(object, 'ssrc')
     });
   }

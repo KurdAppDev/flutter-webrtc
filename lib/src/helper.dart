@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import '../flutter_webrtc.dart';
 import 'interface/media_stream.dart';
 import 'interface/mediadevices.dart';
 
@@ -16,16 +16,14 @@ class Helper {
   /// Note: Make sure to call this gettet after
   /// navigator.mediaDevices.getUserMedia(), otherwise the devices will not be
   /// listed.
-  static Future<List<MediaDeviceInfo>> get cameras =>
-      enumerateDevices('videoinput');
+  static Future<List<MediaDeviceInfo>> get cameras => enumerateDevices('videoinput');
 
   /// Return the available audiooutputs
   ///
   /// Note: Make sure to call this gettet after
   /// navigator.mediaDevices.getUserMedia(), otherwise the devices will not be
   /// listed.
-  static Future<List<MediaDeviceInfo>> get audiooutputs =>
-      enumerateDevices('audiooutput');
+  static Future<List<MediaDeviceInfo>> get audiooutputs => enumerateDevices('audiooutput');
 
   /// To select a a specific camera, you need to set constraints
   /// eg.
@@ -43,8 +41,7 @@ class Helper {
   }
 
   /// For web implementation, make sure to pass the target deviceId
-  static Future<bool> switchCamera(MediaStreamTrack track,
-      [String? deviceId, MediaStream? stream]) async {
+  static Future<bool> switchCamera(MediaStreamTrack track, [String? deviceId, MediaStream? stream]) async {
     if (track.kind != 'video') {
       throw 'The is not a video track => $track';
     }

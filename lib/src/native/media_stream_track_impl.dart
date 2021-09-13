@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../helper.dart';
 import '../interface/media_stream_track.dart';
 import 'utils.dart';
 
@@ -12,8 +12,7 @@ class MediaStreamTrackNative extends MediaStreamTrack {
   MediaStreamTrackNative(this._trackId, this._label, this._kind, this._enabled);
 
   factory MediaStreamTrackNative.fromMap(Map<dynamic, dynamic> map) {
-    return MediaStreamTrackNative(
-        map['id'], map['label'], map['kind'], map['enabled']);
+    return MediaStreamTrackNative(map['id'], map['label'], map['kind'], map['enabled']);
   }
 
   final _channel = WebRTC.methodChannel();
@@ -26,8 +25,7 @@ class MediaStreamTrackNative extends MediaStreamTrack {
 
   @override
   set enabled(bool enabled) {
-    _channel.invokeMethod('mediaStreamTrackSetEnable',
-        <String, dynamic>{'trackId': _trackId, 'enabled': enabled});
+    _channel.invokeMethod('mediaStreamTrackSetEnable', <String, dynamic>{'trackId': _trackId, 'enabled': enabled});
     _enabled = enabled;
 
     if (kind == 'audio') {
@@ -80,14 +78,9 @@ class MediaStreamTrackNative extends MediaStreamTrack {
     var filePath = await getTemporaryDirectory();
     await _channel.invokeMethod<void>(
       'captureFrame',
-      <String, dynamic>{
-        'trackId': _trackId,
-        'path': filePath.path + '/captureFrame.png'
-      },
+      <String, dynamic>{'trackId': _trackId, 'path': filePath.path + '/captureFrame.png'},
     );
-    return File(filePath.path + '/captureFrame.png')
-        .readAsBytes()
-        .then((value) => value.buffer);
+    return File(filePath.path + '/captureFrame.png').readAsBytes().then((value) => value.buffer);
   }
 
   @override
@@ -95,8 +88,7 @@ class MediaStreamTrackNative extends MediaStreamTrack {
     if (constraints == null) return Future.value();
 
     var _current = getConstraints();
-    if (constraints.containsKey('volume') &&
-        _current['volume'] != constraints['volume']) {
+    if (constraints.containsKey('volume') && _current['volume'] != constraints['volume']) {
       setVolume(constraints['volume']);
     }
 

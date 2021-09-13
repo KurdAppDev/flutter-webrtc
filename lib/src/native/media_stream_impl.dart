@@ -6,12 +6,10 @@ import 'media_stream_track_impl.dart';
 import 'utils.dart';
 
 class MediaStreamNative extends MediaStream {
-  MediaStreamNative(String streamId, String ownerTag)
-      : super(streamId, ownerTag);
+  MediaStreamNative(String streamId, String ownerTag) : super(streamId, ownerTag);
 
   factory MediaStreamNative.fromMap(Map<dynamic, dynamic> map) {
-    return MediaStreamNative(map['streamId'], map['ownerTag'])
-      ..setMediaTracks(map['audioTracks'], map['videoTracks']);
+    return MediaStreamNative(map['streamId'], map['ownerTag'])..setMediaTracks(map['audioTracks'], map['videoTracks']);
   }
 
   final _channel = WebRTC.methodChannel();
@@ -22,20 +20,14 @@ class MediaStreamNative extends MediaStream {
   void setMediaTracks(List<dynamic> audioTracks, List<dynamic> videoTracks) {
     _audioTracks.clear();
 
-    if (audioTracks != null) {
-      audioTracks.forEach((track) {
-        _audioTracks.add(MediaStreamTrackNative(
-            track['id'], track['label'], track['kind'], track['enabled']));
-      });
-    }
+    audioTracks.forEach((track) {
+      _audioTracks.add(MediaStreamTrackNative(track['id'], track['label'], track['kind'], track['enabled']));
+    });
 
     _videoTracks.clear();
-    if (videoTracks != null) {
-      videoTracks.forEach((track) {
-        _videoTracks.add(MediaStreamTrackNative(
-            track['id'], track['label'], track['kind'], track['enabled']));
-      });
-    }
+    videoTracks.forEach((track) {
+      _videoTracks.add(MediaStreamTrackNative(track['id'], track['label'], track['kind'], track['enabled']));
+    });
   }
 
   @override
@@ -54,8 +46,7 @@ class MediaStreamNative extends MediaStream {
   }
 
   @override
-  Future<void> addTrack(MediaStreamTrack track,
-      {bool addToNative = true}) async {
+  Future<void> addTrack(MediaStreamTrack track, {bool addToNative = true}) async {
     if (track.kind == 'audio') {
       _audioTracks.add(track);
     } else {
@@ -63,14 +54,12 @@ class MediaStreamNative extends MediaStream {
     }
 
     if (addToNative) {
-      await _channel.invokeMethod('mediaStreamAddTrack',
-          <String, dynamic>{'streamId': id, 'trackId': track.id});
+      await _channel.invokeMethod('mediaStreamAddTrack', <String, dynamic>{'streamId': id, 'trackId': track.id});
     }
   }
 
   @override
-  Future<void> removeTrack(MediaStreamTrack track,
-      {bool removeFromNative = true}) async {
+  Future<void> removeTrack(MediaStreamTrack track, {bool removeFromNative = true}) async {
     if (track.kind == 'audio') {
       _audioTracks.removeWhere((it) => it.id == track.id);
     } else {
@@ -78,8 +67,7 @@ class MediaStreamNative extends MediaStream {
     }
 
     if (removeFromNative) {
-      await _channel.invokeMethod('mediaStreamRemoveTrack',
-          <String, dynamic>{'streamId': id, 'trackId': track.id});
+      await _channel.invokeMethod('mediaStreamRemoveTrack', <String, dynamic>{'streamId': id, 'trackId': track.id});
     }
   }
 

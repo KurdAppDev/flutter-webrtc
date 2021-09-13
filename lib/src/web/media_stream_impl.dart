@@ -26,8 +26,7 @@ class MediaStreamWeb extends MediaStream {
   }
 
   @override
-  Future<void> removeTrack(MediaStreamTrack track,
-      {bool removeFromNative = true}) async {
+  Future<void> removeTrack(MediaStreamTrack track, {bool removeFromNative = true}) async {
     if (removeFromNative) {
       var _native = track as MediaStreamTrackWeb;
       jsStream.removeTrack(_native.jsTrack);
@@ -37,18 +36,14 @@ class MediaStreamWeb extends MediaStream {
   @override
   List<MediaStreamTrack> getAudioTracks() {
     var audioTracks = <MediaStreamTrack>[];
-    jsStream
-        .getAudioTracks()
-        .forEach((jsTrack) => audioTracks.add(MediaStreamTrackWeb(jsTrack)));
+    jsStream.getAudioTracks().forEach((jsTrack) => audioTracks.add(MediaStreamTrackWeb(jsTrack)));
     return audioTracks;
   }
 
   @override
   List<MediaStreamTrack> getVideoTracks() {
     var audioTracks = <MediaStreamTrack>[];
-    jsStream
-        .getVideoTracks()
-        .forEach((jsTrack) => audioTracks.add(MediaStreamTrackWeb(jsTrack)));
+    jsStream.getVideoTracks().forEach((jsTrack) => audioTracks.add(MediaStreamTrackWeb(jsTrack)));
     return audioTracks;
   }
 

@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:flutter_webrtc/src/helper.dart';
+import '../helper.dart';
 
 typedef StreamTrackCallback = Function();
 
@@ -71,6 +71,11 @@ abstract class MediaStreamTrack {
   // MediaStreamTrack clone();
 
   Future<void> stop();
+
+  //
+  // https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/getSettings
+  //
+  Map<String, dynamic> getSettings() => throw UnimplementedError();
 
   /// Throws error if switching camera failed
   @Deprecated('use Helper.switchCamera() instead')

@@ -3,9 +3,6 @@ import 'dart:html' as html;
 import 'dart:js' as js;
 import 'dart:js_util' as jsutil;
 
-import 'package:flutter_webrtc/src/interface/rtc_track_event.dart';
-import 'package:flutter_webrtc/src/web/rtc_rtp_transceiver_impl.dart';
-
 import '../interface/enums.dart';
 import '../interface/media_stream.dart';
 import '../interface/media_stream_track.dart';
@@ -18,12 +15,14 @@ import '../interface/rtc_rtp_sender.dart';
 import '../interface/rtc_rtp_transceiver.dart';
 import '../interface/rtc_session_description.dart';
 import '../interface/rtc_stats_report.dart';
+import '../interface/rtc_track_event.dart';
 import 'media_stream_impl.dart';
 import 'media_stream_track_impl.dart';
 import 'rtc_data_channel_impl.dart';
 import 'rtc_dtmf_sender_impl.dart';
 import 'rtc_rtp_receiver_impl.dart';
 import 'rtc_rtp_sender_impl.dart';
+import 'rtc_rtp_transceiver_impl.dart';
 
 /*
  *  PeerConnection
@@ -39,14 +38,12 @@ class RTCPeerConnectionWeb extends RTCPeerConnection {
         throw Exception('The stream must have a valid identifier');
       }
 
-      final _remoteStream = _remoteStreams.putIfAbsent(
-          jsStream.id!, () => MediaStreamWeb(jsStream, _peerConnectionId));
+      final _remoteStream = _remoteStreams.putIfAbsent(jsStream.id!, () => MediaStreamWeb(jsStream, _peerConnectionId));
 
       onAddStream?.call(_remoteStream);
 
       jsStream.onAddTrack.listen((mediaStreamTrackEvent) {
-        final jsTrack =
-            (mediaStreamTrackEvent as html.MediaStreamTrackEvent).track;
+        final jsTrack = (mediaStreamTrackEvent as html.MediaStreamTrackEvent).track;
         if (jsTrack == null) {
           throw Exception('The Media Stream track is null');
         }
@@ -57,8 +54,7 @@ class RTCPeerConnectionWeb extends RTCPeerConnection {
       });
 
       jsStream.onRemoveTrack.listen((mediaStreamTrackEvent) {
-        final jsTrack =
-            (mediaStreamTrackEvent as html.MediaStreamTrackEvent).track;
+        final jsTrack = (mediaStreamTrackEvent as html.MediaStreamTrackEvent).track;
         if (jsTrack == null) {
           throw Exception('The Media Stream track is null');
         }
@@ -82,8 +78,7 @@ class RTCPeerConnectionWeb extends RTCPeerConnection {
     });
 
     _jsPc.onIceConnectionStateChange.listen((_) {
-      _iceConnectionState =
-          iceConnectionStateForString(_jsPc.iceConnectionState);
+      _iceConnectionState = iceConnectionStateForString(_jsPc.iceConnectionState);
       onIceConnectionState?.call(_iceConnectionState!);
     });
 
@@ -94,8 +89,7 @@ class RTCPeerConnectionWeb extends RTCPeerConnection {
 
     _jsPc.onRemoveStream.listen((mediaStreamEvent) {
       if (mediaStreamEvent.stream?.id != null) {
-        final _remoteStream =
-            _remoteStreams.remove(mediaStreamEvent.stream!.id);
+        final _remoteStream = _remoteStreams.remove(mediaStreamEvent.stream!.id);
         if (_remoteStream != null) {
           onRemoveStream?.call(_remoteStream);
         }
@@ -122,13 +116,8 @@ class RTCPeerConnectionWeb extends RTCPeerConnection {
           RTCTrackEvent(
             track: MediaStreamTrackWeb(trackEvent.track!),
             receiver: RTCRtpReceiverWeb(trackEvent.receiver!),
-            transceiver: RTCRtpTransceiverWeb.fromJsObject(
-                jsutil.getProperty(trackEvent, 'transceiver')),
-            streams: (trackEvent.streams != null)
-                ? trackEvent.streams!
-                    .map((e) => MediaStreamWeb(e, _peerConnectionId))
-                    .toList()
-                : [],
+            transceiver: RTCRtpTransceiverWeb.fromJsObject(jsutil.getProperty(trackEvent, 'transceiver')),
+            streams: (trackEvent.streams != null) ? trackEvent.streams!.map((e) => MediaStreamWeb(e, _peerConnectionId)).toList() : [],
           ),
         );
       }
@@ -176,24 +165,23 @@ class RTCPeerConnectionWeb extends RTCPeerConnection {
   }
 
   @override
-  Future<RTCSessionDescription> createOffer(
-      [Map<String, dynamic>? constraints]) async {
-    final offer = await _jsPc.createOffer(constraints);
-    return _sessionFromJs(offer);
+  Future<RTCSessionDescription> createOffer([Map<String, dynamic>? constraints]) async {
+    final args = constraints != null ? [jsutil.jsify(constraints)] : [];
+    final desc = await jsutil.promiseToFuture<dynamic>(jsutil.callMethod(_jsPc, 'createOffer', args));
+    return RTCSessionDescription(jsutil.getProperty(desc, 'sdp'), jsutil.getProperty(desc, 'type'));
   }
 
   @override
-  Future<RTCSessionDescription> createAnswer(
-      [Map<String, dynamic>? constraints]) async {
-    final answer = await _jsPc.createAnswer(constraints);
-    return _sessionFromJs(answer);
+  Future<RTCSessionDescription> createAnswer([Map<String, dynamic>? constraints]) async {
+    final args = constraints != null ? [jsutil.jsify(constraints)] : [];
+    final desc = await jsutil.promiseToFuture<dynamic>(jsutil.callMethod(_jsPc, 'createAnswer', args));
+    return RTCSessionDescription(jsutil.getProperty(desc, 'sdp'), jsutil.getProperty(desc, 'type'));
   }
 
   @override
   Future<void> addStream(MediaStream stream) {
     var _native = stream as MediaStreamWeb;
-    _localStreams.putIfAbsent(
-        stream.id, () => MediaStreamWeb(_native.jsStream, _peerConnectionId));
+    _localStreams.putIfAbsent(stream.id, () => MediaStreamWeb(_native.jsStream, _peerConnectionId));
     _jsPc.addStream(_native.jsStream);
     return Future.value();
   }
@@ -238,8 +226,7 @@ class RTCPeerConnectionWeb extends RTCPeerConnection {
       Completer completer = Completer<void>();
       var success = js.allowInterop(() => completer.complete());
       var failure = js.allowInterop((e) => completer.completeError(e));
-      jsutil.callMethod(
-          _jsPc, 'addIceCandidate', [_iceToJs(candidate), success, failure]);
+      jsutil.callMethod(_jsPc, 'addIceCandidate', [_iceToJs(candidate), success, failure]);
 
       return completer.future;
     } catch (e) {
@@ -252,33 +239,26 @@ class RTCPeerConnectionWeb extends RTCPeerConnection {
     var stats;
     if (track != null) {
       var jsTrack = (track as MediaStreamTrackWeb).jsTrack;
-      stats = await jsutil.promiseToFuture<dynamic>(
-          jsutil.callMethod(_jsPc, 'getStats', [jsTrack]));
+      stats = await jsutil.promiseToFuture<dynamic>(jsutil.callMethod(_jsPc, 'getStats', [jsTrack]));
     } else {
       stats = await _jsPc.getStats();
     }
 
     var report = <StatsReport>[];
     stats.forEach((key, value) {
-      report.add(
-          StatsReport(value['id'], value['type'], value['timestamp'], value));
+      report.add(StatsReport(value['id'], value['type'], value['timestamp'], value));
     });
     return report;
   }
 
   @override
-  List<MediaStream> getLocalStreams() =>
-      _jsPc.getLocalStreams().map((e) => _localStreams[e.id]!).toList();
+  List<MediaStream> getLocalStreams() => _jsPc.getLocalStreams().map((e) => _localStreams[e.id]!).toList();
 
   @override
-  List<MediaStream> getRemoteStreams() => _jsPc
-      .getRemoteStreams()
-      .map((jsStream) => _remoteStreams[jsStream.id]!)
-      .toList();
+  List<MediaStream> getRemoteStreams() => _jsPc.getRemoteStreams().map((jsStream) => _remoteStreams[jsStream.id]!).toList();
 
   @override
-  Future<RTCDataChannel> createDataChannel(
-      String label, RTCDataChannelInit dataChannelDict) {
+  Future<RTCDataChannel> createDataChannel(String label, RTCDataChannelInit dataChannelDict) {
     final map = dataChannelDict.toMap();
     if (dataChannelDict.binaryType == 'binary') {
       map['binaryType'] = 'arraybuffer'; // Avoid Blob in data channel
@@ -311,15 +291,12 @@ class RTCPeerConnectionWeb extends RTCPeerConnection {
         candidate.sdpMLineIndex,
       );
 
-  html.RtcIceCandidate _iceToJs(RTCIceCandidate c) =>
-      html.RtcIceCandidate(c.toMap());
+  html.RtcIceCandidate _iceToJs(RTCIceCandidate c) => html.RtcIceCandidate(c.toMap());
 
-  RTCSessionDescription _sessionFromJs(html.RtcSessionDescription? sd) =>
-      RTCSessionDescription(sd?.sdp, sd?.type);
+  RTCSessionDescription _sessionFromJs(html.RtcSessionDescription? sd) => RTCSessionDescription(sd?.sdp, sd?.type);
 
   @override
-  Future<RTCRtpSender> addTrack(MediaStreamTrack track,
-      [MediaStream? stream]) async {
+  Future<RTCRtpSender> addTrack(MediaStreamTrack track, [MediaStream? stream]) async {
     var jStream = (stream as MediaStreamWeb).jsStream;
     var jsTrack = (track as MediaStreamTrackWeb).jsTrack;
     var sender = _jsPc.addTrack(jsTrack, jStream);
@@ -369,18 +346,32 @@ class RTCPeerConnectionWeb extends RTCPeerConnection {
   }
 
   //'audio|video', { 'direction': 'recvonly|sendonly|sendrecv' }
+  //
+  // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addTransceiver
+  //
   @override
-  Future<RTCRtpTransceiver> addTransceiver(
-      {MediaStreamTrack? track,
-      RTCRtpMediaType? kind,
-      RTCRtpTransceiverInit? init}) async {
-    var kindLabel = kind != null ? typeRTCRtpMediaTypetoString[kind] : null;
-    var kindOrTrack = kindLabel ?? (track as MediaStreamTrackWeb).jsTrack;
-    final jsOptions = jsutil
-        .jsify(init != null ? RTCRtpTransceiverInitWeb.initToMap(init) : {});
-    var transceiver =
-        jsutil.callMethod(_jsPc, 'addTransceiver', [kindOrTrack, jsOptions]);
-    return RTCRtpTransceiverWeb.fromJsObject(transceiver,
-        peerConnectionId: _peerConnectionId);
+  Future<RTCRtpTransceiver> addTransceiver({
+    MediaStreamTrack? track,
+    RTCRtpMediaType? kind,
+    RTCRtpTransceiverInit? init,
+  }) async {
+    final jsTrack = track is MediaStreamTrackWeb ? track.jsTrack : null;
+    final kindString = kind != null ? typeRTCRtpMediaTypetoString[kind] : null;
+    final trackOrKind = jsTrack ?? kindString;
+    assert(trackOrKind != null, 'track or kind must not be null');
+
+    final transceiver = jsutil.callMethod(
+      _jsPc,
+      'addTransceiver',
+      [
+        trackOrKind,
+        if (init != null) init.toJsObject(),
+      ],
+    );
+
+    return RTCRtpTransceiverWeb.fromJsObject(
+      transceiver,
+      peerConnectionId: _peerConnectionId,
+    );
   }
 }

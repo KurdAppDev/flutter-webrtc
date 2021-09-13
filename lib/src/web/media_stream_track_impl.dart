@@ -45,8 +45,7 @@ class MediaStreamTrackWeb extends MediaStreamTrack {
     // to be merged to use jsTrack.applyConstraints() directly
     final arg = js.jsify(constraints ?? {});
 
-    final _val = await js.promiseToFuture<void>(
-        js.callMethod(jsTrack, 'applyConstraints', [arg]));
+    final _val = await js.promiseToFuture<void>(js.callMethod(jsTrack, 'applyConstraints', [arg]));
     return _val;
   }
 
@@ -59,18 +58,21 @@ class MediaStreamTrackWeb extends MediaStreamTrack {
   // }
 
   @override
+  Map<String, dynamic> getSettings() {
+    return jsTrack.getSettings() as Map<String, dynamic>;
+  }
+
+  @override
   Future<ByteBuffer> captureFrame() async {
     final imageCapture = html.ImageCapture(jsTrack);
     final bitmap = await imageCapture.grabFrame();
     final canvas = html.CanvasElement();
     canvas.width = bitmap.width;
     canvas.height = bitmap.height;
-    final renderer =
-        canvas.getContext('bitmaprenderer') as html.ImageBitmapRenderingContext;
+    final renderer = canvas.getContext('bitmaprenderer') as html.ImageBitmapRenderingContext;
     js.callMethod(renderer, 'transferFromImageBitmap', [bitmap]);
     final blod = await canvas.toBlob();
-    var array =
-        await js.promiseToFuture(js.callMethod(blod, 'arrayBuffer', []));
+    var array = await js.promiseToFuture(js.callMethod(blod, 'arrayBuffer', []));
     bitmap.close();
     return array;
   }
