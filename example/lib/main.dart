@@ -1,15 +1,13 @@
 import 'dart:core';
 
-import 'package:flutter/foundation.dart'
-    show debugDefaultTargetPlatformOverride;
+import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride;
 import 'package:flutter/material.dart';
 import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-
+import 'package:flutter_webrtc/src/native/screen_capture_picker_view.dart';
 import 'src/data_channel_sample.dart';
 import 'src/get_display_media_sample.dart';
-import 'src/get_user_media_sample.dart'
-    if (dart.library.html) 'src/get_user_media_sample_web.dart';
+import 'src/get_user_media_sample.dart' if (dart.library.html) 'src/get_user_media_sample_web.dart';
 import 'src/loopback_sample.dart';
 import 'src/route_item.dart';
 
@@ -28,11 +26,10 @@ Future<bool> startForegroundService() async {
     notificationTitle: 'Title of the notification',
     notificationText: 'Text of the notification',
     notificationImportance: AndroidNotificationImportance.Default,
-    notificationIcon: AndroidResource(
-        name: 'background_icon',
-        defType: 'drawable'), // Default is ic_launcher from folder mipmap
+    notificationIcon: AndroidResource(name: 'background_icon', defType: 'drawable'), // Default is ic_launcher from folder mipmap
   );
-  return FlutterBackground.initialize(androidConfig: androidConfig);
+  await FlutterBackground.initialize(androidConfig: androidConfig);
+  return FlutterBackground.enableBackgroundExecution();
 }
 
 class MyApp extends StatefulWidget {
@@ -42,7 +39,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late List<RouteItem> items;
-
+  late IOSScreenCapturePickerController controller;
   @override
   void initState() {
     super.initState();
@@ -67,13 +64,29 @@ class _MyAppState extends State<MyApp> {
           appBar: AppBar(
             title: Text('Flutter-WebRTC example'),
           ),
-          body: ListView.builder(
-              shrinkWrap: true,
-              padding: const EdgeInsets.all(0.0),
-              itemCount: items.length,
-              itemBuilder: (context, i) {
-                return _buildRow(context, items[i]);
-              })),
+          body: Column(
+            children: [
+              /* Expanded(child: ScreenCapturePickerView(
+                onCapturePickerViewCreatedCallback: (IOSScreenCapturePickerController controller) {
+                  this.controller = controller;
+                },
+              )),*/
+              ElevatedButton(
+                  onPressed: () {
+                    controller.show();
+                  },
+                  child: Text('show')),
+              Expanded(
+                child: ListView.builder(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.all(0.0),
+                    itemCount: items.length,
+                    itemBuilder: (context, i) {
+                      return _buildRow(context, items[i]);
+                    }),
+              ),
+            ],
+          )),
     );
   }
 
@@ -82,35 +95,22 @@ class _MyAppState extends State<MyApp> {
       RouteItem(
           title: 'GetUserMedia',
           push: (BuildContext context) {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (BuildContext context) => GetUserMediaSample()));
+            Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => GetUserMediaSample()));
           }),
       RouteItem(
           title: 'GetDisplayMedia',
           push: (BuildContext context) {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (BuildContext context) =>
-                        GetDisplayMediaSample()));
+            Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => GetDisplayMediaSample()));
           }),
       RouteItem(
           title: 'LoopBack Sample',
           push: (BuildContext context) {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (BuildContext context) => LoopBackSample()));
+            Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => LoopBackSample()));
           }),
       RouteItem(
           title: 'DataChannel',
           push: (BuildContext context) {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (BuildContext context) => DataChannelSample()));
+            Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => DataChannelSample()));
           }),
     ];
   }

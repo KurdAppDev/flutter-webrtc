@@ -3,6 +3,7 @@
 #import "FlutterRTCMediaStream.h"
 #import "FlutterRTCDataChannel.h"
 #import "FlutterRTCVideoRenderer.h"
+#import "ScreenCapturePickerView.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <WebRTC/WebRTC.h>
@@ -30,6 +31,10 @@
                                      binaryMessenger:[registrar messenger]];
 #if TARGET_OS_IPHONE
     UIViewController *viewController = (UIViewController *)registrar.messenger;
+    if (@available(iOS 12.0, *)) {
+        ScreenCapturePickerViewFactory * factory = [[ScreenCapturePickerViewFactory alloc] initWithMessenger:registrar.messenger];
+        [registrar registerViewFactory:factory withId:@"systemBroadcastPickerView"];
+    }
 #endif
     FlutterWebRTCPlugin* instance = [[FlutterWebRTCPlugin alloc] initWithChannel:channel
                                                                        registrar:registrar

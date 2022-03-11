@@ -98,8 +98,7 @@ class _DataChannelSampleState extends State<DataChannelSample> {
     if (_peerConnection != null) return;
 
     try {
-      _peerConnection =
-          await createPeerConnection(configuration, loopbackConstraints);
+      _peerConnection = await createPeerConnection(configuration, loopbackConstraints);
 
       _peerConnection!.onSignalingState = _onSignalingState;
       _peerConnection!.onIceGatheringState = _onIceGatheringState;
@@ -115,8 +114,7 @@ class _DataChannelSampleState extends State<DataChannelSample> {
       _dataChannelDict!.protocol = 'sctp';
       _dataChannelDict!.negotiated = false;
 
-      _dataChannel = await _peerConnection!
-          .createDataChannel('dataChannel', _dataChannelDict!);
+      _dataChannel = await _peerConnection!.createDataChannel('dataChannel', _dataChannelDict!);
       _peerConnection!.onDataChannel = _onDataChannel;
 
       var description = await _peerConnection!.createOffer(offerSdpConstraints);

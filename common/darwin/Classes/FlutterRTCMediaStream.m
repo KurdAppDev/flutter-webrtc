@@ -8,6 +8,8 @@
 
 #if TARGET_OS_IPHONE
 #import "FlutterRPScreenRecorder.h"
+#import "ScreenCapturer.h"
+#import "ScreenCaptureController.h"
 #endif
 
 @implementation AVCaptureDevice (Flutter)
@@ -439,16 +441,20 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
 #if TARGET_OS_IPHONE
 -(void)getDisplayMedia:(NSDictionary *)constraints
                 result:(FlutterResult)result {
+    NSLog(@"getDisplayMedia:%@",constraints.description);
     NSString *mediaStreamId = [[NSUUID UUID] UUIDString];
     RTCMediaStream *mediaStream = [self.peerConnectionFactory mediaStreamWithStreamId:mediaStreamId];
     
     RTCVideoSource *videoSource = [self.peerConnectionFactory videoSource];
-    FlutterRPScreenRecorder *screenCapturer = [[FlutterRPScreenRecorder alloc] initWithDelegate:videoSource];
+    
+    ScreenCapturer *screenCapturer = [[ScreenCapturer alloc] initWithDelegate:videoSource];
+    ScreenCaptureController *screenCaptureController = [[ScreenCaptureController alloc] initWithCapturer:screenCapturer];
+    //FlutterRPScreenRecorder *screenCapturer = [[FlutterRPScreenRecorder alloc] initWithDelegate:videoSource];
 
-    [screenCapturer startCapture];
+    [screenCaptureController startCapture];
     
     //TODO:
-    self.videoCapturer = screenCapturer;
+    self.videoCapturer = screenCaptureController;
     
     NSString *trackUUID = [[NSUUID UUID] UUIDString];
     RTCVideoTrack *videoTrack = [self.peerConnectionFactory videoTrackWithSource:videoSource trackId:trackUUID];

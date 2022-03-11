@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:core';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:flutter_webrtc/src/native/screen_capture_picker_view.dart';
 
 /*
  * getDisplayMedia sample
@@ -16,7 +18,8 @@ class GetDisplayMediaSample extends StatefulWidget {
 
 class _GetDisplayMediaSampleState extends State<GetDisplayMediaSample> {
   MediaStream? _localStream;
-  final _localRenderer = RTCVideoRenderer();
+  final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
+  late IOSScreenCapturePickerController controller;
   bool _inCalling = false;
   Timer? _timer;
   var _counter = 0;
@@ -52,11 +55,9 @@ class _GetDisplayMediaSampleState extends State<GetDisplayMediaSample> {
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': true};
 
     try {
-      var stream =
-          await navigator.mediaDevices.getDisplayMedia(mediaConstraints);
+      var stream = await createStream(true);
       stream.getVideoTracks()[0].onEnded = () {
-        print(
-            'By adding a listener on onEnded you can: 1) catch stop video sharing on Web');
+        print('By adding a listener on onEnded you can: 1) catch stop video sharing on Web');
       };
 
       _localStream = stream;
@@ -73,8 +74,32 @@ class _GetDisplayMediaSampleState extends State<GetDisplayMediaSample> {
     _timer = Timer.periodic(Duration(milliseconds: 100), handleTimer);
   }
 
+  Future<MediaStream> createStream(bool userScreen) async {
+    final Map<String, dynamic> mediaConstraints = {
+      'audio': userScreen ? false : true,
+      'video': userScreen
+          ? true
+          : {
+              'mandatory': {
+                'minWidth': '640', // Provide your own width, height and frame rate here
+                'minHeight': '480',
+                'minFrameRate': '30',
+              },
+              'facingMode': 'user',
+              'optional': [],
+            }
+    };
+
+    MediaStream stream =
+        userScreen ? await navigator.mediaDevices.getDisplayMedia(mediaConstraints) : await navigator.mediaDevices.getUserMedia(mediaConstraints);
+    return stream;
+  }
+
   Future<void> _stop() async {
     try {
+      if (kIsWeb) {
+        _localStream?.getTracks().forEach((track) => track.stop());
+      }
       await _localStream?.dispose();
       _localStream = null;
       _localRenderer.srcObject = null;
@@ -95,7 +120,7 @@ class _GetDisplayMediaSampleState extends State<GetDisplayMediaSample> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('GetUserMedia API Test'),
+        title: Text('GetDisplayMedia API Test'),
         actions: [],
       ),
       body: OrientationBuilder(
@@ -105,12 +130,39 @@ class _GetDisplayMediaSampleState extends State<GetDisplayMediaSample> {
               Center(
                 child: Text('counter: ' + _counter.toString()),
               ),
-              Container(
-                margin: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height,
-                decoration: BoxDecoration(color: Colors.black54),
-                child: RTCVideoView(_localRenderer),
+              Column(
+                children: [
+                  SizedBox(
+                    width: 0,
+                    height: 0,
+                    child: IOSScreenCapturePickerView(
+                      onCapturePickerViewCreatedCallback: (IOSScreenCapturePickerController controller) {
+                        this.controller = controller;
+                        this.controller.onBroadcastStarted = () {
+                          print('this.controller.onBroadcastStarted');
+                        };
+
+                        this.controller.onBroadcastStopped = () {
+                          print('this.controller.onBroadcastStopped');
+                        };
+                      },
+                    ),
+                  ),
+                  ElevatedButton(
+                      onPressed: () {
+                        controller.show();
+                      },
+                      child: Text('show')),
+                  Expanded(
+                    child: Container(
+                      margin: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.height,
+                      decoration: BoxDecoration(color: Colors.black54),
+                      child: RTCVideoView(_localRenderer),
+                    ),
+                  ),
+                ],
               )
             ]),
           );

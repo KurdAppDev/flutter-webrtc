@@ -2,6 +2,7 @@
 import 'dart:core';
 import 'dart:html' as html;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
@@ -57,8 +58,7 @@ class _GetUserMediaSampleState extends State<GetUserMediaSample> {
       'audio': true,
       'video': {
         'mandatory': {
-          'minWidth':
-              '1280', // Provide your own width, height and frame rate here
+          'minWidth': '1280', // Provide your own width, height and frame rate here
           'minHeight': '720',
           'minFrameRate': '30',
         },
@@ -82,6 +82,9 @@ class _GetUserMediaSampleState extends State<GetUserMediaSample> {
 
   Future<void> _stop() async {
     try {
+      if (kIsWeb) {
+        _localStream?.getTracks().forEach((track) => track.stop());
+      }
       await _localStream?.dispose();
       _localStream = null;
       _localRenderer.srcObject = null;
@@ -116,15 +119,12 @@ class _GetUserMediaSampleState extends State<GetUserMediaSample> {
 
   void _captureFrame() async {
     if (_localStream == null) throw Exception('Can\'t record without a stream');
-    final videoTrack = _localStream!
-        .getVideoTracks()
-        .firstWhere((track) => track.kind == 'video');
+    final videoTrack = _localStream!.getVideoTracks().firstWhere((track) => track.kind == 'video');
     final frame = await videoTrack.captureFrame();
     await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-              content:
-                  Image.memory(frame.asUint8List(), height: 720, width: 1280),
+              content: Image.memory(frame.asUint8List(), height: 720, width: 1280),
               actions: <Widget>[
                 TextButton(
                   onPressed: Navigator.of(context, rootNavigator: true).pop,
@@ -195,8 +195,7 @@ class _GetUserMediaSampleState extends State<GetUserMediaSample> {
   void _switchCamera(String deviceId) async {
     if (_localStream == null) return;
 
-    await Helper.switchCamera(
-        _localStream!.getVideoTracks()[0], deviceId, _localStream);
+    await Helper.switchCamera(_localStream!.getVideoTracks()[0], deviceId, _localStream);
     setState(() {});
   }
 }

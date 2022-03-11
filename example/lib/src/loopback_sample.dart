@@ -19,8 +19,7 @@ class _MyAppState extends State<LoopBackSample> {
   bool _inCalling = false;
   Timer? _timer;
 
-  String get sdpSemantics =>
-      WebRTC.platformIsWindows ? 'plan-b' : 'unified-plan';
+  String get sdpSemantics => 'unified-plan';
 
   @override
   void initState() {
@@ -133,9 +132,8 @@ class _MyAppState extends State<LoopBackSample> {
       'audio': true,
       'video': {
         'mandatory': {
-          'minWidth':
-              '1280', // Provide your own width, height and frame rate here
-          'minHeight': '720',
+          'minWidth': '640', // Provide your own width, height and frame rate here
+          'minHeight': '480',
           'minFrameRate': '30',
         },
         'facingMode': 'user',
@@ -168,8 +166,7 @@ class _MyAppState extends State<LoopBackSample> {
     if (_peerConnection != null) return;
 
     try {
-      _peerConnection =
-          await createPeerConnection(configuration, loopbackConstraints);
+      _peerConnection = await createPeerConnection(configuration, loopbackConstraints);
 
       _peerConnection!.onSignalingState = _onSignalingState;
       _peerConnection!.onIceGatheringState = _onIceGatheringState;
@@ -178,8 +175,7 @@ class _MyAppState extends State<LoopBackSample> {
       _peerConnection!.onIceCandidate = _onCandidate;
       _peerConnection!.onRenegotiationNeeded = _onRenegotiationNeeded;
 
-      _localStream =
-          await navigator.mediaDevices.getUserMedia(mediaConstraints);
+      _localStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
       _localRenderer.srcObject = _localStream;
 
       switch (sdpSemantics) {
@@ -242,7 +238,7 @@ class _MyAppState extends State<LoopBackSample> {
               ),
             ],
           ));
-      
+
       await _peerConnection.addTransceiver(
           kind: RTCRtpMediaType.RTCRtpMediaTypeVideo);
       await _peerConnection.addTransceiver(
@@ -257,8 +253,9 @@ class _MyAppState extends State<LoopBackSample> {
       print('sdp = $sdp');
       await _peerConnection!.setLocalDescription(description);
       //change for loopback.
-      description.type = 'answer';
-      await _peerConnection!.setRemoteDescription(description);
+      var sdp_answer = sdp?.replaceAll('setup:actpass', 'setup:active');
+      var description_answer = RTCSessionDescription(sdp_answer!, 'answer');
+      await _peerConnection!.setRemoteDescription(description_answer);
 
       // _peerConnection!.getStats();
       /* Unfied-Plan replaceTrack
@@ -296,8 +293,7 @@ class _MyAppState extends State<LoopBackSample> {
   }
 
   void _sendDtmf() async {
-    var dtmfSender =
-        _peerConnection?.createDtmfSender(_localStream!.getAudioTracks()[0]);
+    var dtmfSender = _peerConnection?.createDtmfSender(_localStream!.getAudioTracks()[0]);
     await dtmfSender?.insertDTMF('123#');
   }
 
@@ -329,12 +325,8 @@ class _MyAppState extends State<LoopBackSample> {
             child: Container(
               decoration: BoxDecoration(color: Colors.black54),
               child: orientation == Orientation.portrait
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: widgets)
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: widgets),
+                  ? Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: widgets)
+                  : Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: widgets),
             ),
           );
         },
